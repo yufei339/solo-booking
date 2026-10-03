@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}约课{% endblock %}</title>
+  <style>
+    body { margin: 0; background: #f7f6f3; color: #1f2933;
+           font: 16px/1.6 -apple-system, "PingFang SC", sans-serif; }
+    main { max-width: 480px; margin: 0 auto; padding: 24px 16px; }
+    .card { background: #fff; border-radius: 12px; padding: 16px; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <main>{% block content %}{% endblock %}</main>
+</body>
+</html>
