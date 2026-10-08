@@ -17,3 +17,58 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest
+
+  deploy:
+    # 只在 main 分支的 push 上跑，且必须等测试通过
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: test
+    runs-on: ubuntu-24.04-arm # 原生 arm64，和 Lambda 架构一致，不用 QEMU
+    permissions:
+      id-token: write # 允许向 GitHub 申请 OIDC 令牌
+      contents: read
+    concurrency:
+      group: deploy-main
+      cancel-in-progress: true # 连续 push 时取消旧的部署，防止旧镜像覆盖新镜像
+    env:
+      AWS_REGION: ca-central-1
+      FUNCTION_NAME: solo-booking
+    steps:
+      - uses: actions/checkout@v7
+
+      # 用 OIDC 令牌换 1 小时临时凭证，仓库里没有任何 AWS 密钥
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - uses: docker/setup-buildx-action@v3
+
+      # tag = git 短 hash，线上跑的是哪次提交一眼能看出来
+      - id: meta
+        run: echo "tag=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push image
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/${{ env.FUNCTION_NAME }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          docker buildx build \
+            --platform linux/arm64 \
+            --provenance=false --sbom=false \
+            -t "$IMAGE:$TAG" -t "$IMAGE:latest" \
+            --push .
+
+      - name: Update Lambda
+        env:
+          IMAGE: ${{ steps.ecr.outputs.registry }}/${{ env.FUNCTION_NAME }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          aws lambda update-function-code \
+            --function-name "$FUNCTION_NAME" \
+            --image-uri "$IMAGE:$TAG" \
+            --query 'FunctionArn' --output text
+          aws lambda wait function-updated --function-name "$FUNCTION_NAME"
+          echo "Deployed $TAG"
