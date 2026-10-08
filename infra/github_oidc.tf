@@ -3,7 +3,7 @@
 
 variable "github_repo" {
   type    = string
-  default = "yufei339/solo-booking"
+  default = "yufei339@66227307/solo-booking@1400810149"
 }
 
 # 1. 登记 GitHub 这个"签发方"
