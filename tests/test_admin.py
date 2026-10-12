@@ -1,7 +1,9 @@
+from datetime import date
+
 import pytest
 from fastapi.testclient import TestClient
 
-from app import db
+from app import clock, db
 from app.main import app
 
 client = TestClient(app)
@@ -26,7 +28,7 @@ def test_right_password_sets_session_and_redirects(monkeypatch):
         "/admin/login", data={"password": "right"}, follow_redirects=False
     )
     assert response.status_code == 303
-    assert response.headers["location"] == "/admin/template"
+    assert response.headers["location"] == "/admin/bookings"
     assert "session" in response.cookies
 
 
@@ -89,3 +91,20 @@ def test_dayoff_add_and_delete(admin):
 def test_dayoff_rejects_bad_date(admin):
     response = admin.post("/admin/dayoff", data={"day": "not-a-date"})
     assert response.status_code == 422
+
+
+def test_bookings_page_lists_and_deletes(admin, monkeypatch):
+    monkeypatch.setattr(clock, "today", lambda: date(2026, 10, 19))
+    db.create_booking(date(2026, 10, 20), "10:00", "小王", "13800000000")
+    db.create_booking(
+        date(2026, 12, 1), "10:00", "太远", "13800000001"
+    )  # 超出 14 天不显示
+    page = admin.get("/admin/bookings")
+    assert "小王" in page.text and "13800000000" in page.text
+    assert "太远" not in page.text
+
+    response = admin.post(
+        "/admin/bookings/2026-10-20/10:00/delete", follow_redirects=False
+    )
+    assert response.status_code == 303
+    assert db.get_booking(date(2026, 10, 20), "10:00") is None

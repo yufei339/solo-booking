@@ -5,6 +5,8 @@ from fastapi.responses import HTMLResponse
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.admin import router as admin_router
+from app.availability import available_days
+from app.booking import router as booking_router
 from app.templating import templates
 
 app = FastAPI(title="solo-booking")
@@ -16,6 +18,7 @@ app.add_middleware(
     max_age=14 * 24 * 3600,  # 14 天免登录
 )
 app.include_router(admin_router)
+app.include_router(booking_router)
 
 
 @app.get("/health")
@@ -25,4 +28,6 @@ def health() -> dict[str, str]:
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(request, "index.html", {"coach_name": "教练"})
+    return templates.TemplateResponse(
+        request, "index.html", {"coach_name": "教练", "days": available_days()}
+    )

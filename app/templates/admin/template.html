@@ -3,7 +3,7 @@
 {% block title %}每周可约时段{% endblock %}
 
 {% block content %}
-  <nav><a href="/admin/dayoff">请假日</a> · <form method="post" action="/admin/logout" class="inline"><button class="link">退出</button></form></nav>
+  {% include "admin/_nav.html" %}
   <h1>每周可约时段</h1>
   {% if saved %}<p class="ok">已保存</p>{% endif %}
   <form method="post" action="/admin/template">
