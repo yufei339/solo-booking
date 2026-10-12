@@ -56,3 +56,11 @@ def test_past_times_today_are_removed(monkeypatch):
     monkeypatch.setattr(clock, "now", lambda: fake_now)
     days = availability.available_days(MONDAY, days=1)
     assert days[0].times == ["11:00"]  # 10:00 已经开始，不能约
+
+
+def test_can_cancel_needs_24_hours():
+    now = datetime(2026, 10, 19, 10, 0, tzinfo=clock.TZ)
+    assert availability.can_cancel(date(2026, 10, 20), "10:00", now)  # 正好 24h
+    assert availability.can_cancel(date(2026, 10, 21), "09:00", now)
+    assert not availability.can_cancel(date(2026, 10, 20), "09:00", now)  # 23h
+    assert not availability.can_cancel(date(2026, 10, 19), "11:00", now)

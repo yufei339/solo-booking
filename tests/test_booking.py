@@ -76,3 +76,40 @@ def test_race_between_check_and_write_gets_409(monkeypatch):
     assert response.status_code == 409
     assert "刚被别人约走" in response.text
     assert db.get_booking(MONDAY, "09:00")["name"] == "小李"
+
+
+def _book(day: str, time: str) -> str:
+    response = client.post(
+        f"/book/{day}/{time}",
+        data={"name": "小王", "phone": "13800000000"},
+        follow_redirects=False,
+    )
+    return response.headers["location"]  # /booking/{day}/{time}/{token}
+
+
+def test_cancel_more_than_24h_ahead():
+    db.save_template({"0": ["09:00"], "1": ["09:00"]})
+    detail = _book("2026-10-20", "09:00")  # 周二 09:00，距"现在"(周一 08:00) 25 小时
+    page = client.get(detail + "/cancel")
+    assert page.status_code == 200 and "确认取消" in page.text
+
+    response = client.post(detail + "/cancel")
+    assert response.status_code == 200 and "已取消" in response.text
+    assert db.get_booking(date(2026, 10, 20), "09:00") is None
+    assert client.get(detail).status_code == 404  # 链接随之失效
+
+
+def test_cancel_within_24h_is_refused():
+    detail = _book("2026-10-19", "10:00")  # 距"现在" 2 小时
+    page = client.get(detail + "/cancel")
+    assert "不足 24 小时" in page.text and "确认取消" not in page.text
+
+    response = client.post(detail + "/cancel")
+    assert response.status_code == 403
+    assert db.get_booking(MONDAY, "10:00") is not None
+
+
+def test_cancel_with_wrong_token_is_404():
+    _book("2026-10-19", "10:00")
+    assert client.post("/booking/2026-10-19/10:00/bad-token/cancel").status_code == 404
+    assert db.get_booking(MONDAY, "10:00") is not None

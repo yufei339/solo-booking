@@ -61,14 +61,17 @@ jobs:
             -t "$IMAGE:$TAG" -t "$IMAGE:latest" \
             --push .
 
-      - name: Update Lambda
+      # 两个函数共用一个镜像：Web 函数和每日邮件函数
+      - name: Update Lambda functions
         env:
           IMAGE: ${{ steps.ecr.outputs.registry }}/${{ env.FUNCTION_NAME }}
           TAG: ${{ steps.meta.outputs.tag }}
         run: |
-          aws lambda update-function-code \
-            --function-name "$FUNCTION_NAME" \
-            --image-uri "$IMAGE:$TAG" \
-            --query 'FunctionArn' --output text
-          aws lambda wait function-updated --function-name "$FUNCTION_NAME"
+          for fn in "$FUNCTION_NAME" "$FUNCTION_NAME-daily"; do
+            aws lambda update-function-code \
+              --function-name "$fn" \
+              --image-uri "$IMAGE:$TAG" \
+              --query 'FunctionArn' --output text
+            aws lambda wait function-updated --function-name "$fn"
+          done
           echo "Deployed $TAG"
