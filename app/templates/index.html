@@ -5,5 +5,22 @@
 {% block content %}
   <h1>预约 {{ coach_name }} 的课</h1>
   <p>一对一 · 每节 60 分钟 · 提前 24 小时可取消</p>
-  <div class="card">可约时段即将上线，敬请期待。</div>
+  {% for d in days %}
+    <div class="card">
+      <strong>{{ d.label }}</strong>
+      {% if d.status == "off" %}
+        <p class="muted">休息</p>
+      {% elif d.status == "none" %}
+        <p class="muted">不开课</p>
+      {% elif d.status == "full" %}
+        <p class="muted">已约满</p>
+      {% else %}
+        <div class="chips">
+          {% for t in d.times %}
+            <a class="chip-link" href="/book/{{ d.day }}/{{ t }}">{{ t }}</a>
+          {% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
 {% endblock %}

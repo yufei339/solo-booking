@@ -1,10 +1,14 @@
 """DynamoDB 数据访问层。"""
 
 import os
+import secrets
 from datetime import date
 
 import boto3
 from boto3.dynamodb.conditions import Key
+from botocore.exceptions import ClientError
+
+from app.clock import now
 
 TABLE_NAME = os.environ.get("TABLE_NAME", "solo-booking")
 
@@ -55,3 +59,46 @@ def add_day_off(day: date) -> None:
 
 def remove_day_off(day: date) -> None:
     table().delete_item(Key={"PK": "COACH", "SK": f"DAYOFF#{day.isoformat()}"})
+
+
+# ---------- 预约 ----------
+
+
+class SlotTaken(Exception):
+    """该时段已被别人约走。"""
+
+
+def list_bookings(day: date) -> list[dict]:
+    """某天的全部预约，按时间升序（SK 就是时间，Query 天然有序）。"""
+    resp = table().query(
+        KeyConditionExpression=Key("PK").eq(f"BOOKING#{day.isoformat()}")
+    )
+    return resp["Items"]
+
+
+def get_booking(day: date, time: str) -> dict | None:
+    resp = table().get_item(Key={"PK": f"BOOKING#{day.isoformat()}", "SK": time})
+    return resp.get("Item")
+
+
+def create_booking(day: date, time: str, name: str, phone: str) -> dict:
+    """条件写入：主键已存在就失败，保证同一时段只成功一个。"""
+    item = {
+        "PK": f"BOOKING#{day.isoformat()}",
+        "SK": time,
+        "name": name,
+        "phone": phone,
+        "token": secrets.token_urlsafe(16),  # 取消凭证，只出现在预约人的链接里
+        "created_at": now().isoformat(),
+    }
+    try:
+        table().put_item(Item=item, ConditionExpression="attribute_not_exists(PK)")
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "ConditionalCheckFailedException":
+            raise SlotTaken(f"{day} {time}") from e
+        raise
+    return item
+
+
+def delete_booking(day: date, time: str) -> None:
+    table().delete_item(Key={"PK": f"BOOKING#{day.isoformat()}", "SK": time})

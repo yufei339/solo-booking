@@ -2,14 +2,14 @@
 
 import hmac
 import os
-from datetime import date, datetime
+from datetime import date, timedelta
 from typing import Annotated
-from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from app import db
+from app.clock import today
 from app.templating import templates
 
 router = APIRouter(prefix="/admin")
@@ -31,7 +31,7 @@ def login(request: Request, password: Annotated[str, Form()]):
     expected = os.environ.get("ADMIN_PASSWORD", "")
     if expected and hmac.compare_digest(password, expected):
         request.session["admin"] = True
-        return RedirectResponse("/admin/template", status_code=303)
+        return RedirectResponse("/admin/bookings", status_code=303)
     return templates.TemplateResponse(
         request, "admin/login.html", {"error": "密码不对"}, status_code=401
     )
@@ -78,13 +78,6 @@ def save_template(slot: Annotated[list[str] | None, Form()] = None):
 
 # ---------- 请假日 ----------
 
-TZ = ZoneInfo("America/Vancouver")
-
-
-def today() -> date:
-    """按温哥华本地日期算"今天"。Lambda 系统时区是 UTC，不能用 date.today()。"""
-    return datetime.now(TZ).date()
-
 
 @router.get(
     "/dayoff", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
@@ -107,3 +100,26 @@ def add_dayoff(day: Annotated[date, Form()]):
 def delete_dayoff(day: date):
     db.remove_day_off(day)
     return RedirectResponse("/admin/dayoff", status_code=303)
+
+
+# ---------- 预约列表 ----------
+
+
+@router.get(
+    "/bookings", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
+)
+def bookings_page(request: Request):
+    start = today()
+    days = []
+    for offset in range(14):
+        day = start + timedelta(days=offset)
+        items = db.list_bookings(day)
+        if items:
+            days.append((day, items))
+    return templates.TemplateResponse(request, "admin/bookings.html", {"days": days})
+
+
+@router.post("/bookings/{day}/{time}/delete", dependencies=[Depends(require_admin)])
+def admin_delete_booking(day: date, time: str):
+    db.delete_booking(day, time)
+    return RedirectResponse("/admin/bookings", status_code=303)

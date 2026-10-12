@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}预约列表{% endblock %}
+
+{% block content %}
+  {% include "admin/_nav.html" %}
+  <h1>未来 14 天预约</h1>
+  {% if not days %}<div class="card"><p class="muted">暂无预约</p></div>{% endif %}
+  {% for day, items in days %}
+    <div class="card">
+      <strong>{{ day }}</strong>
+      {% for b in items %}
+        <form method="post" action="/admin/bookings/{{ day }}/{{ b.SK }}/delete" class="row">
+          <span>{{ b.SK }} · {{ b.name }} · <a href="tel:{{ b.phone }}">{{ b.phone }}</a></span>
+          <button class="link">取消</button>
+        </form>
+      {% endfor %}
+    </div>
+  {% endfor %}
+{% endblock %}
