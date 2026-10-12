@@ -9,6 +9,19 @@
            font: 16px/1.6 -apple-system, "PingFang SC", sans-serif; }
     main { max-width: 480px; margin: 0 auto; padding: 24px 16px; }
     .card { background: #fff; border-radius: 12px; padding: 16px; margin-top: 16px; }
+    label { display: block; margin-bottom: 12px; }
+    input, button { width: 100%; box-sizing: border-box; font-size: 16px; padding: 12px; margin-top: 6px;
+                    border: 1px solid #d4d1cb; border-radius: 8px; }
+    button { background: #1f2933; color: #fff; border: 0; }
+    .error { color: #b4232c; }
+    .ok { color: #1a7f4b; }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    .chip input { display: none; }
+    .chip span { display: inline-block; padding: 8px 12px; border: 1px solid #d4d1cb; border-radius: 999px; }
+    .chip input:checked + span { background: #1f2933; color: #fff; border-color: #1f2933; }
+    nav { font-size: 14px; } nav .inline { display: inline; }
+    .link { width: auto; padding: 0; margin: 0; background: none; color: #1f2933; text-decoration: underline; }
   </style>
 </head>
 <body>
