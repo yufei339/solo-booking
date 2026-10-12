@@ -40,7 +40,9 @@ resource "aws_lambda_function" "app" {
 
   environment {
     variables = {
-      TABLE_NAME = aws_dynamodb_table.main.name
+      TABLE_NAME     = aws_dynamodb_table.main.name
+      ADMIN_PASSWORD = var.admin_password
+      SESSION_SECRET = var.session_secret
     }
   }
 
