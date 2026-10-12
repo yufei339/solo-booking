@@ -27,3 +27,8 @@ variable "session_secret" {
   sensitive   = true
   description = "签名登录 Cookie 的密钥，泄露等于能伪造登录态"
 }
+
+variable "coach_email" {
+  type        = string
+  description = "SES 验证的邮箱：每日课表的发件人兼收件人（沙盒期间）"
+}

@@ -64,3 +64,41 @@ def booking_detail(request: Request, day: date, time: str, token: str):
     return templates.TemplateResponse(
         request, "booked.html", {"day": day, "time": time, "booking": booking}
     )
+
+
+# ---------- 客户自助取消 ----------
+
+
+def _booking_for(day: date, time: str, token: str) -> dict | None:
+    booking = db.get_booking(day, time)
+    if booking and booking["token"] == token:
+        return booking
+    return None
+
+
+@router.get("/booking/{day}/{time}/{token}/cancel", response_class=HTMLResponse)
+def cancel_confirm(request: Request, day: date, time: str, token: str):
+    booking = _booking_for(day, time, token)
+    if not booking:
+        return _unavailable(request)
+    ctx = {
+        "day": day,
+        "time": time,
+        "token": token,
+        "allowed": availability.can_cancel(day, time),
+    }
+    return templates.TemplateResponse(request, "cancel.html", ctx)
+
+
+@router.post("/booking/{day}/{time}/{token}/cancel", response_class=HTMLResponse)
+def cancel_submit(request: Request, day: date, time: str, token: str):
+    booking = _booking_for(day, time, token)
+    if not booking:
+        return _unavailable(request)
+    if not availability.can_cancel(day, time):
+        ctx = {"day": day, "time": time, "token": token, "allowed": False}
+        return templates.TemplateResponse(request, "cancel.html", ctx, status_code=403)
+    db.delete_booking(day, time)
+    return templates.TemplateResponse(
+        request, "cancelled.html", {"day": day, "time": time}
+    )

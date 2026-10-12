@@ -7,6 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.admin import router as admin_router
 from app.availability import available_days
 from app.booking import router as booking_router
+from app.tasks import router as tasks_router
 from app.templating import templates
 
 app = FastAPI(title="solo-booking")
@@ -19,6 +20,7 @@ app.add_middleware(
 )
 app.include_router(admin_router)
 app.include_router(booking_router)
+app.include_router(tasks_router)
 
 
 @app.get("/health")

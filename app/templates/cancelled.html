@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}已取消{% endblock %}
+
+{% block content %}
+  <h1>已取消</h1>
+  <div class="card"><p>{{ day }} {{ time }} 的预约已取消，时段重新开放。</p></div>
+  <p><a href="/">← 回首页重新预约</a></p>
+{% endblock %}

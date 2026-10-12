@@ -76,7 +76,7 @@ data "aws_iam_policy_document" "github_deploy" {
       "lambda:GetFunction",
       "lambda:GetFunctionConfiguration",
     ]
-    resources = [aws_lambda_function.app.arn]
+    resources = [aws_lambda_function.app.arn, aws_lambda_function.daily.arn]
   }
 }
 

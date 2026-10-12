@@ -1,7 +1,7 @@
 """空位计算：模板 − 请假日 − 已约 − 已过时间。纯业务逻辑，不碰 HTTP。"""
 
 from dataclasses import dataclass
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from app import clock, db
 
@@ -47,3 +47,14 @@ def is_bookable(day: date, time: str) -> bool:
     if not (start <= day < start + timedelta(days=14)):
         return False
     return time in available_days(day, days=1)[0].times
+
+
+CANCEL_NOTICE = timedelta(hours=24)
+
+
+def can_cancel(day: date, time: str, now: datetime | None = None) -> bool:
+    """客户自助取消：距上课开始必须还有 24 小时以上。"""
+    now = now or clock.now()
+    hour, minute = (int(x) for x in time.split(":"))
+    start = datetime(day.year, day.month, day.day, hour, minute, tzinfo=clock.TZ)
+    return start - now >= CANCEL_NOTICE
