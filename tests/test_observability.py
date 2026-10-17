@@ -28,7 +28,8 @@ def test_request_log_has_method_path_status(caplog):
 
 def test_unhandled_exception_logged_and_returns_500_page(admin, caplog):
     caplog.set_level(logging.INFO, logger="solo_booking")
-    client = TestClient(app, raise_server_exceptions=False)
+    # raise_server_exceptions 默认 True：异常若漏到服务器层测试会直接炸，证明中间件兜住了
+    client = TestClient(app)
     client.cookies = admin.cookies
     response = client.post("/admin/boom")
     assert response.status_code == 500
