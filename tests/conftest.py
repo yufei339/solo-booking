@@ -1,8 +1,10 @@
 import boto3
 import pytest
+from fastapi.testclient import TestClient
 from moto import mock_aws
 
 from app import db
+from app.main import app
 
 
 @pytest.fixture(autouse=True)
@@ -27,3 +29,12 @@ def fake_dynamodb(monkeypatch):
         db._table = None
         yield
         db._table = None
+
+
+@pytest.fixture
+def admin(monkeypatch):
+    """已登录教练的测试客户端。"""
+    monkeypatch.setenv("ADMIN_PASSWORD", "right")
+    c = TestClient(app)
+    c.post("/admin/login", data={"password": "right"})
+    return c

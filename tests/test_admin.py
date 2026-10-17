@@ -1,6 +1,5 @@
 from datetime import date
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app import clock, db
@@ -36,14 +35,6 @@ def test_missing_password_env_locks_everyone_out(monkeypatch):
     monkeypatch.delenv("ADMIN_PASSWORD", raising=False)
     response = client.post("/admin/login", data={"password": "anything"})
     assert response.status_code == 401
-
-
-@pytest.fixture
-def admin(monkeypatch):
-    monkeypatch.setenv("ADMIN_PASSWORD", "right")
-    c = TestClient(app)
-    c.post("/admin/login", data={"password": "right"})
-    return c
 
 
 def test_template_requires_login():

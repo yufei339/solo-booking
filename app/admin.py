@@ -123,3 +123,12 @@ def bookings_page(request: Request):
 def admin_delete_booking(day: date, time: str):
     db.delete_booking(day, time)
     return RedirectResponse("/admin/bookings", status_code=303)
+
+
+# ---------- 告警演练 ----------
+
+
+@router.post("/boom", dependencies=[Depends(require_admin)])
+def boom():
+    """故意抛异常制造 500，用来演练告警。只有登录教练能打，界面上不露出。"""
+    raise RuntimeError("boom: deliberate failure for alarm drill")
