@@ -1,8 +1,19 @@
 from datetime import date, datetime
 
+import pytest
+
 from app import availability, clock, db
 
 MONDAY = date(2026, 10, 19)
+
+
+@pytest.fixture(autouse=True)
+def frozen_clock(monkeypatch):
+    """固定"现在"为周一早上 8 点。否则等真实日期走到 2026-10-19，当天时段会被当成已过去。"""
+    monkeypatch.setattr(
+        clock, "now", lambda: datetime(2026, 10, 19, 8, 0, tzinfo=clock.TZ)
+    )
+    monkeypatch.setattr(clock, "today", lambda: MONDAY)
 
 
 def test_empty_template_means_no_class():
