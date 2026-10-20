@@ -12,6 +12,7 @@ WEEKDAY_LABELS = ["周一", "周二", "周三", "周四", "周五", "周六", "�
 class DayAvailability:
     day: date
     label: str  # 例如 "10-20 周二"
+    weekday: str  # 周二
     status: str  # "open" 有空位 / "full" 已约满 / "off" 休息 / "none" 该星期不开课
     times: list[str]
 
@@ -25,19 +26,22 @@ def available_days(start: date | None = None, days: int = 14) -> list[DayAvailab
     result = []
     for offset in range(days):
         day = start + timedelta(days=offset)
-        label = f"{day.month}-{day.day:02d} {WEEKDAY_LABELS[day.weekday()]}"
+        weekday = WEEKDAY_LABELS[day.weekday()]
+        label = f"{day.month}-{day.day:02d} {weekday}"
         if day.isoformat() in days_off:
-            result.append(DayAvailability(day, label, "off", []))
+            result.append(DayAvailability(day, label, weekday, "off", []))
             continue
         times = list(template.get(str(day.weekday()), []))
         if not times:
-            result.append(DayAvailability(day, label, "none", []))
+            result.append(DayAvailability(day, label, weekday, "none", []))
             continue
         booked = {b["SK"] for b in db.list_bookings(day)}
         times = [t for t in times if t not in booked]
         if day == now.date():
             times = [t for t in times if t > now.strftime("%H:%M")]  # 今天只留还没到的
-        result.append(DayAvailability(day, label, "open" if times else "full", times))
+        result.append(
+            DayAvailability(day, label, weekday, "open" if times else "full", times)
+        )
     return result
 
 

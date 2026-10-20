@@ -33,6 +33,4 @@ def health() -> dict[str, str]:
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse(
-        request, "index.html", {"coach_name": "教练", "days": available_days()}
-    )
+    return templates.TemplateResponse(request, "index.html", {"days": available_days()})

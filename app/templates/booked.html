@@ -3,11 +3,29 @@
 {% block title %}预约成功{% endblock %}
 
 {% block content %}
-  <h1>预约成功</h1>
-  <div class="card">
-    <p><strong>{{ day }} {{ time }}</strong> · {{ booking.name }}</p>
-    <p class="muted">请保存本页链接，取消预约要用。上课前 24 小时内不能取消。</p>
-    <p><a href="/booking/{{ day }}/{{ time }}/{{ booking.token }}/cancel">取消这次预约</a></p>
+  {% set c = coach() %}
+  <h1>预约成功 🎉</h1>
+  <div class="card summary">
+    <div class="big">{{ day|cn_date }} · {{ time }} – {{ time|end_time }}</div>
+    <div class="muted">{{ booking.name }} · {{ c.name }}{% if c.location %} · {{ c.location }}{% endif %}</div>
   </div>
-  <p><a href="/">← 返回首页</a></p>
+  <div class="card">
+    <p class="muted" style="margin-top:0">请保存本页链接，取消预约要用。上课前 24 小时内不能取消。</p>
+    <button class="btn secondary block" type="button" id="copy-link">复制本页链接</button>
+    <input id="link" value="" readonly style="position:absolute;left:-9999px">
+    <p style="margin-top:12px"><a href="/booking/{{ day }}/{{ time }}/{{ booking.token }}/cancel">需要取消这次预约？</a></p>
+  </div>
+  <p><a class="back" href="/">← 回首页</a></p>
+{% endblock %}
+
+{% block after %}
+<script>
+  const btn = document.getElementById('copy-link'), box = document.getElementById('link');
+  box.value = location.href;
+  btn.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(location.href); }
+    catch (e) { box.style.position = 'static'; box.select(); document.execCommand('copy'); box.style.position = 'absolute'; }
+    btn.textContent = '已复制 ✓'; setTimeout(() => btn.textContent = '复制本页链接', 2000);
+  });
+</script>
 {% endblock %}

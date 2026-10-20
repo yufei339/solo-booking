@@ -55,3 +55,19 @@ variable "cloudflare_zone_id" {
   type        = string
   description = "Cloudflare 里 yufeichen.dev 的 Zone ID（域名 Overview 页右侧）"
 }
+
+# 页面上的教练信息；留空用代码里的默认文案
+variable "coach_name" {
+  type    = string
+  default = "教练"
+}
+
+variable "coach_tagline" {
+  type    = string
+  default = "一对一私教 · 每节 60 分钟"
+}
+
+variable "coach_location" {
+  type    = string
+  default = ""
+}
