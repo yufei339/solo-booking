@@ -3,16 +3,15 @@
 {% block title %}取消预约{% endblock %}
 
 {% block content %}
+  <a class="back" href="/booking/{{ day }}/{{ time }}/{{ token }}">← 返回预约详情</a>
   <h1>取消预约</h1>
-  <div class="card">
-    <p><strong>{{ day }} {{ time }}</strong></p>
-    {% if allowed %}
-      <form method="post">
-        <button type="submit">确认取消</button>
-      </form>
-    {% else %}
-      <p class="error">距上课不足 24 小时，不能自助取消，请直接联系教练。</p>
-    {% endif %}
+  <div class="card summary">
+    <div class="big">{{ day|cn_date }} · {{ time }} – {{ time|end_time }}</div>
   </div>
-  <p><a href="/booking/{{ day }}/{{ time }}/{{ token }}">← 返回预约详情</a></p>
+  {% if allowed %}
+    <form method="post" id="cancel-form"></form>
+    <div class="sticky"><button class="btn danger block" type="submit" form="cancel-form">确认取消</button></div>
+  {% else %}
+    <div class="card"><p class="error" style="margin:0">距上课不足 24 小时，不能自助取消，请直接联系教练。</p></div>
+  {% endif %}
 {% endblock %}

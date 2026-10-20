@@ -43,6 +43,9 @@ resource "aws_lambda_function" "app" {
       TABLE_NAME     = aws_dynamodb_table.main.name
       ADMIN_PASSWORD = var.admin_password
       SESSION_SECRET = var.session_secret
+      COACH_NAME     = var.coach_name
+      COACH_TAGLINE  = var.coach_tagline
+      COACH_LOCATION = var.coach_location
     }
   }
 

@@ -1,18 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}预约 {{ day }} {{ time }}{% endblock %}
+{% block title %}预约 {{ day|cn_date }} {{ time }}{% endblock %}
 
 {% block content %}
-  <p><a href="/">← 返回</a></p>
-  <h1>{{ day }} {{ time }}</h1>
-  <form method="post" class="card">
+  {% set c = coach() %}
+  <a class="back" href="/">← 返回选时段</a>
+  <h1>确认预约</h1>
+  <div class="card summary">
+    <div class="big">{{ day|cn_date }} · {{ time }} – {{ time|end_time }}</div>
+    <div class="muted">{{ c.name }} · 一对一 · {{ session_minutes }} 分钟{% if c.location %} · {{ c.location }}{% endif %}</div>
+  </div>
+  <form method="post" class="card" id="book-form">
     <label>姓名
-      <input type="text" name="name" value="{{ name }}" required autofocus>
+      <input type="text" name="name" value="{{ name }}" required autofocus autocomplete="name">
     </label>
     <label>手机号
-      <input type="tel" name="phone" value="{{ phone }}" required>
+      <input type="tel" name="phone" value="{{ phone }}" required autocomplete="tel" inputmode="tel">
     </label>
     {% if error %}<p class="error">{{ error }}</p>{% endif %}
-    <button type="submit">确认预约</button>
+    <p class="muted" style="font-size:13px">上课前 24 小时内不能自助取消。</p>
   </form>
+  <div class="sticky"><button class="btn block" type="submit" form="book-form">确认预约</button></div>
 {% endblock %}

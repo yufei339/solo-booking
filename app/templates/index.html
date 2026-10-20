@@ -1,26 +1,66 @@
 {% extends "base.html" %}
 
-{% block title %}预约 {{ coach_name }} 的课{% endblock %}
+{% block title %}{{ coach().name }} · 约课{% endblock %}
 
 {% block content %}
-  <h1>预约 {{ coach_name }} 的课</h1>
-  <p>一对一 · 每节 60 分钟 · 提前 24 小时可取消</p>
-  {% for d in days %}
-    <div class="card">
-      <strong>{{ d.label }}</strong>
-      {% if d.status == "off" %}
-        <p class="muted">休息</p>
-      {% elif d.status == "none" %}
-        <p class="muted">不开课</p>
-      {% elif d.status == "full" %}
-        <p class="muted">已约满</p>
-      {% else %}
-        <div class="chips">
-          {% for t in d.times %}
-            <a class="chip-link" href="/book/{{ d.day }}/{{ t }}">{{ t }}</a>
-          {% endfor %}
-        </div>
-      {% endif %}
+  {% set c = coach() %}
+  <header class="brand">
+    <div class="avatar">{{ c.name[:1] }}</div>
+    <div>
+      <div class="name">{{ c.name }}</div>
+      <div class="tagline">{{ c.tagline }}{% if c.location %} · {{ c.location }}{% endif %}</div>
     </div>
+  </header>
+
+  <h2>选择日期</h2>
+  {% set ns = namespace(first=none) %}
+  {% for d in days %}{% if d.status == "open" and ns.first is none %}{% set ns.first = d.day %}{% endif %}{% endfor %}
+  {% set selected = ns.first or days[0].day %}
+  <div class="days" role="tablist">
+    {% for d in days %}
+      <button class="day{% if d.day == selected %} is-selected{% endif %}{% if d.status != 'open' %} is-empty{% endif %}"
+              type="button" data-day="{{ d.day }}" role="tab" aria-selected="{{ 'true' if d.day == selected else 'false' }}">
+        <small>{{ d.weekday }}</small>
+        <b>{{ d.day.day }}</b>
+        {% if d.status == "open" %}<span class="dot"></span>{% endif %}
+      </button>
+    {% endfor %}
+  </div>
+
+  {% for d in days %}
+    <section class="panel" id="panel-{{ d.day }}" {% if d.day != selected %}hidden{% endif %}>
+      <h2>{{ d.day|cn_date }}</h2>
+      {% if d.status == "open" %}
+        {% for t in d.times %}
+          <div class="slot">
+            <div>
+              <div class="time">{{ t }} – {{ t|end_time }}</div>
+              <div class="meta">一对一 · {{ session_minutes }} 分钟</div>
+            </div>
+            <a class="btn sm" href="/book/{{ d.day }}/{{ t }}">预约</a>
+          </div>
+        {% endfor %}
+      {% elif d.status == "off" %}
+        <p class="empty">这天教练休息</p>
+      {% elif d.status == "none" %}
+        <p class="empty">这天不开课</p>
+      {% else %}
+        <p class="empty">这天已约满</p>
+      {% endif %}
+    </section>
   {% endfor %}
+{% endblock %}
+
+{% block after %}
+<script>
+  const strip = document.querySelector('.days');
+  strip.addEventListener('click', (e) => {
+    const btn = e.target.closest('.day'); if (!btn) return;
+    strip.querySelectorAll('.day').forEach(b => { b.classList.remove('is-selected'); b.setAttribute('aria-selected', 'false'); });
+    btn.classList.add('is-selected'); btn.setAttribute('aria-selected', 'true');
+    document.querySelectorAll('.panel').forEach(p => p.hidden = (p.id !== 'panel-' + btn.dataset.day));
+    btn.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+  });
+  const sel = strip.querySelector('.is-selected'); if (sel) sel.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+</script>
 {% endblock %}
