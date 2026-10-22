@@ -8,8 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from app import db
-from app.clock import today
+from app import clock, db
 from app.templating import templates
 
 router = APIRouter(prefix="/admin")
@@ -86,7 +85,7 @@ def dayoff_page(request: Request):
     return templates.TemplateResponse(
         request,
         "admin/dayoff.html",
-        {"days": db.list_days_off(today()), "today": today()},
+        {"days": db.list_days_off(clock.today()), "today": clock.today()},
     )
 
 
@@ -109,7 +108,7 @@ def delete_dayoff(day: date):
     "/bookings", response_class=HTMLResponse, dependencies=[Depends(require_admin)]
 )
 def bookings_page(request: Request):
-    start = today()
+    start = clock.today()
     days = []
     for offset in range(14):
         day = start + timedelta(days=offset)

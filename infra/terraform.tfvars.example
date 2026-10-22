@@ -1,0 +1,9 @@
+# 复制成 terraform.tfvars（已被 .gitignore 排除）并填值
+admin_password       = "coach admin password"
+session_secret       = "python3 -c 'import secrets; print(secrets.token_urlsafe(32))'"
+coach_email          = "you@example.com"      # SES 发件人兼收件人（沙盒期间需验证）
+cloudflare_api_token = "Zone:DNS:Edit token scoped to the zone"
+cloudflare_zone_id   = "from the Cloudflare zone overview page"
+coach_name           = "教练"
+coach_tagline        = "一对一私教 · 每节 60 分钟"
+coach_location       = ""
