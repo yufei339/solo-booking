@@ -71,3 +71,9 @@ variable "coach_location" {
   type    = string
   default = ""
 }
+
+variable "daily_email_enabled" {
+  type        = bool
+  default     = false
+  description = "每天 07:00 给教练发当日课表邮件的开关；关掉只停触发器，函数和代码都保留"
+}
