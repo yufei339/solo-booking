@@ -107,6 +107,7 @@ resource "aws_iam_role_policy" "scheduler_invoke" {
 
 resource "aws_scheduler_schedule" "daily" {
   name                         = "${var.app_name}-daily-email"
+  state                        = var.daily_email_enabled ? "ENABLED" : "DISABLED"
   schedule_expression          = "cron(0 7 * * ? *)"
   schedule_expression_timezone = "America/Vancouver"
 
